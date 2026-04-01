@@ -1,0 +1,11 @@
+const express = require('express');
+const router  = express.Router();
+const ctrl    = require('../controllers/course.controller');
+const { protect, authorizeRoles } = require('../middleware/auth.middleware');
+router.use(protect);
+router.get('/',       ctrl.getAllCourses);
+router.get('/:id',    ctrl.getCourseById);
+router.post('/',      authorizeRoles('admin'), ctrl.createCourse);
+router.put('/:id',    authorizeRoles('admin'), ctrl.updateCourse);
+router.delete('/:id', authorizeRoles('admin'), ctrl.deleteCourse);
+module.exports = router;

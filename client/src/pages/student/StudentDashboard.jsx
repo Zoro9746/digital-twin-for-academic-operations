@@ -178,7 +178,8 @@ const StudentDashboard = () => {
     try {
       setPdfLoad(true)
       const token = JSON.parse(localStorage.getItem('dt_user'))?.token
-      const res = await fetch(`/api/reports/student/${student._id}`, {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const res = await fetch(`${API_URL}/reports/student/${student._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (!res.ok) throw new Error('Failed')

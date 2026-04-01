@@ -47,9 +47,25 @@ const FacultyPetitions = () => {
     finally { setSubmitting(false) }
   }
 
-  const handleViewDoc = (petitionId) => {
-    const token = JSON.parse(localStorage.getItem('dt_user'))?.token
-    window.open(`/api/petitions/${petitionId}/document`, '_blank')
+  const handleViewDoc = async (petitionId) => {
+    try {
+      const token = JSON.parse(localStorage.getItem('dt_user'))?.token
+      if (!token) throw new Error('No token found')
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      
+      const res = await fetch(`${API_URL}/petitions/${petitionId}/document`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      if (!res.ok) throw new Error('Failed to fetch document')
+      
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 30000)
+    } catch (e) {
+      setError('Unable to securely load document')
+    }
   }
 
   const filtered = petitions.filter(p => filter === 'all' ? true : p.status === filter)

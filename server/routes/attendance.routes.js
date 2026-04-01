@@ -23,64 +23,6 @@ router.post(
     body('records.*.status').isIn(['present', 'absent', 'late']),
   ],
   validateRequest,
-  // #region agent log
-  (req, res, next) => {
-    // Local NDJSON evidence
-    try {
-      const fs = require('fs');
-      const debugLogPath = 'd:\\FINALLY FINAL\\dt\\debug-fcdc73.log';
-      fs.appendFileSync(
-        debugLogPath,
-        JSON.stringify({
-          sessionId: 'fcdc73',
-          id: `log_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-          timestamp: Date.now(),
-          runId: 'pre-fix',
-          hypothesisId: 'H1',
-          location: 'server/routes/attendance.routes.js:POST /',
-          message: 'Attendance route hit',
-          data: {
-            path: req.path,
-            baseUrl: req.baseUrl,
-            recordsCount: Array.isArray(req.body?.records) ? req.body.records.length : null,
-            hasCourseId: !!req.body?.courseId,
-            hasDate: !!req.body?.date,
-            role: req.user?.role || null,
-          },
-        }) + '\n',
-        { encoding: 'utf8' }
-      );
-    } catch (e) { console.error('debug log write failed (attendance route):', e?.message); }
-
-    // #region agent log (best-effort remote ingest)
-    try {
-      if (typeof fetch === 'function') {
-        fetch('http://127.0.0.1:7793/ingest/67fad1ff-7483-4757-a62d-7b81ccc3b1f2', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'fcdc73' },
-          body: JSON.stringify({
-            sessionId: 'fcdc73',
-            runId: 'pre-fix',
-            hypothesisId: 'H1',
-            location: 'server/routes/attendance.routes.js:POST /',
-            message: 'Attendance route hit',
-            data: {
-              path: req.path,
-              baseUrl: req.baseUrl,
-              recordsCount: Array.isArray(req.body?.records) ? req.body.records.length : null,
-              hasCourseId: !!req.body?.courseId,
-              hasDate: !!req.body?.date,
-              role: req.user?.role || null,
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-      }
-    } catch {}
-    // #endregion agent log (best-effort remote ingest)
-    next();
-  },
-  // #endregion agent log
   ctrl.markAttendance
 );
 router.get('/course/:id',     authorizeRoles('admin','faculty'),   ctrl.getCourseAttendance);

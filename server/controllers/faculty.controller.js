@@ -47,18 +47,38 @@ const createFaculty = async (req, res) => {
       designation: designation || 'Assistant Professor',
     });
 
-    res.status(201).json({ ...faculty.toObject(), name: user.name, email: user.email });
+    res.status(201).json({ 
+      ...faculty.toObject(), 
+      userId: { _id: user._id, name: user.name, email: user.email } 
+    });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
 // @PUT /api/faculty/:id
 const updateFaculty = async (req, res) => {
   try {
+    const { name, email, password, ...rest } = req.body;
     const faculty = await Faculty.findByIdAndUpdate(
-      req.params.id, req.body, { new: true, runValidators: true }
+      req.params.id, rest, { new: true, runValidators: true }
     );
     if (!faculty) return res.status(404).json({ message: 'Faculty not found' });
-    res.json(faculty);
+
+    const userUpdates = {};
+    if (name) userUpdates.name = name;
+    if (email) userUpdates.email = email;
+    if (password) userUpdates.password = password;
+
+    let updatedUser;
+    if (Object.keys(userUpdates).length > 0) {
+      updatedUser = await User.findByIdAndUpdate(faculty.userId, userUpdates, { new: true, runValidators: true });
+    } else {
+      updatedUser = await User.findById(faculty.userId);
+    }
+
+    res.json({
+      ...faculty.toObject(),
+      userId: { _id: updatedUser._id, name: updatedUser.name, email: updatedUser.email }
+    });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 

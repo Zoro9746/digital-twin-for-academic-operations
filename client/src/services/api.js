@@ -1,8 +1,10 @@
 import axios from 'axios'
 
-const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-})
+export const API_ORIGIN = import.meta.env.VITE_API_URL
+if (!API_ORIGIN) console.warn("VITE_API_URL missing! Falling back to proxy.");
+export const API_BASE_URL = API_ORIGIN ? `${API_ORIGIN.replace(/\/$/, '')}/api` : '/api'
+
+const API = axios.create({ baseURL: API_BASE_URL })
 
 API.interceptors.request.use((config) => {
   const s = localStorage.getItem('dt_user')

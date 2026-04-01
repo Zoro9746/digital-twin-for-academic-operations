@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useRef } from 'react'
 import { AuthContext } from '../../context/AuthContext'
-import API from '../../services/api'
+import API, { API_ORIGIN } from '../../services/api'
 import { io } from 'socket.io-client'
 
 const NotificationBell = () => {
@@ -32,7 +32,8 @@ const NotificationBell = () => {
     try {
       const token = JSON.parse(localStorage.getItem('dt_user'))?.token
       if (token) {
-        socket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:5000', { auth: { token } })
+        if (!API_ORIGIN) throw new Error('Missing VITE_API_URL')
+        socket = io(API_ORIGIN.replace(/\/$/, ''), { auth: { token } })
         socketRef.current = socket
 
         socket.on('connect', () => setSocketError(null))

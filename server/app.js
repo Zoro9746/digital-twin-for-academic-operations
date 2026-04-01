@@ -12,7 +12,10 @@ app.set('io', null);
 
 app.use(helmet());
 app.use(morgan('dev'));
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use(cors({ 
+  origin: process.env.CLIENT_URL,
+  credentials: true 
+}));
 app.use(express.json());
 
 // Agent telemetry removed for production

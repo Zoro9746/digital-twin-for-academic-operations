@@ -66,7 +66,10 @@ const createStudent = async (req, res) => {
       userId: user._id, rollNo, department, semester,
       parentEmail: parentEmail || '', parentPhone: parentPhone || '', regulation: regulation || 'R2021',
     });
-    res.status(201).json({ ...student.toObject(), name: user.name, email: user.email });
+    res.status(201).json({ 
+      ...student.toObject(), 
+      userId: { _id: user._id, name: user.name, email: user.email }
+    });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
@@ -83,11 +86,17 @@ const updateStudent = async (req, res) => {
     if (email) userUpdates.email = email;
     if (password) userUpdates.password = password; // Assuming presave hook hashes this
     
+    let updatedUser;
     if (Object.keys(userUpdates).length > 0) {
-      await User.findByIdAndUpdate(student.userId, userUpdates, { runValidators: true });
+      updatedUser = await User.findByIdAndUpdate(student.userId, userUpdates, { new: true, runValidators: true });
+    } else {
+      updatedUser = await User.findById(student.userId);
     }
 
-    res.json(student);
+    res.json({
+      ...student.toObject(),
+      userId: { _id: updatedUser._id, name: updatedUser.name, email: updatedUser.email }
+    });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 

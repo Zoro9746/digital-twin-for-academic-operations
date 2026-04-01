@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import Layout from '../../components/common/Layout'
-import API from '../../services/api'
+import API, { API_BASE_URL } from '../../services/api'
 
 const DEPTS = ['CSE', 'ECE', 'MECH', 'CIVIL']
 const SEMS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -121,9 +121,9 @@ const AdminStudents = () => {
     try {
       setPdfLoading(s._id)
       const token = JSON.parse(localStorage.getItem('dt_user'))?.token
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+      if (!API_BASE_URL) throw new Error('Missing VITE_API_URL')
 
-      const res = await fetch(`${apiUrl}/reports/student/${s._id}`, { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch(`${API_BASE_URL}/reports/student/${s._id}`, { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) throw new Error('Failed to download from remote origin')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)

@@ -115,7 +115,8 @@ const StudentPetitions = () => {
     try {
       const token = JSON.parse(localStorage.getItem('dt_user'))?.token
       if (!token) throw new Error('No token')
-      const res = await fetch(`/api/petitions/${petitionId}/document`, {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const res = await fetch(`${API_URL}/petitions/${petitionId}/document`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error('Failed to fetch document')

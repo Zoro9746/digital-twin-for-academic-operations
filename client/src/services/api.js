@@ -1,8 +1,7 @@
 import axios from 'axios'
 
-export const API_ORIGIN = import.meta.env.VITE_API_URL
-if (!API_ORIGIN) console.warn("VITE_API_URL missing! Falling back to proxy.");
-export const API_BASE_URL = API_ORIGIN ? `${API_ORIGIN.replace(/\/$/, '')}/api` : '/api'
+export const API_ORIGIN = import.meta.env.VITE_API_URL || '';
+export const API_BASE_URL = API_ORIGIN ? `${API_ORIGIN.replace(/\/$/, '')}/api` : '/api';
 
 const API = axios.create({ baseURL: API_BASE_URL })
 

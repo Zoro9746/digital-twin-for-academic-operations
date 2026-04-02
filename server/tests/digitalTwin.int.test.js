@@ -49,6 +49,7 @@ describe('DigitalTwin API integration tests', () => {
 
   afterAll(async () => {
     await mongoose.disconnect();
+    await mongoose.connection.close();
   });
 
   beforeEach(async () => {

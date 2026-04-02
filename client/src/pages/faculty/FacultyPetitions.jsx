@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Layout from '../../components/common/Layout'
-import API from '../../services/api'
+import API, { API_BASE_URL } from '../../services/api'
 
 const STATUS_CONFIG = {
   pending:  { label: 'Pending',  color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
@@ -51,9 +51,7 @@ const FacultyPetitions = () => {
     try {
       const token = JSON.parse(localStorage.getItem('dt_user'))?.token
       if (!token) throw new Error('No token found')
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      
-      const res = await fetch(`${API_URL}/petitions/${petitionId}/document`, {
+      const res = await fetch(`${API_BASE_URL}/petitions/${petitionId}/document`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       

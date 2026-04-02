@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react'
 import Layout from '../../components/common/Layout'
-import API from '../../services/api'
+import API, { API_BASE_URL } from '../../services/api'
 import { AuthContext } from '../../context/AuthContext'
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -178,8 +178,7 @@ const StudentDashboard = () => {
     try {
       setPdfLoad(true)
       const token = JSON.parse(localStorage.getItem('dt_user'))?.token
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
-      const res = await fetch(`${API_URL}/reports/student/${student._id}`, {
+      const res = await fetch(`${API_BASE_URL}/reports/student/${student._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (!res.ok) throw new Error('Failed')

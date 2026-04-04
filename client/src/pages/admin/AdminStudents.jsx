@@ -134,6 +134,29 @@ const AdminStudents = () => {
     finally { setPdfLoading(null) }
   }
 
+  const exportCSV = () => {
+    if (!students.length) return;
+    const headers = ['Roll No', 'Name', 'Email', 'Department', 'Semester', 'Phone', 'Enrolled Courses'];
+    const rows = students.map(s => [
+      s.rollNo || '',
+      s.userId?.name || '',
+      s.userId?.email || '',
+      s.department || '',
+      s.semester || '',
+      s.phone || '',
+      (s.enrolledCourses || []).length
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(e => e.map(String).map(v => v.includes(',') ? `"${v}"` : v).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `students_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setMsg({ type: 'ok', text: 'CSV export completed successfully.' });
+  }
+
   const filtered = search
     ? students.filter(s => {
       const q = search.toLowerCase()
@@ -150,9 +173,14 @@ const AdminStudents = () => {
           <h1 className="text-2xl font-semibold text-slate-800 font-serif pb-1">Student Registry</h1>
           <p className="text-sm text-slate-500">{total} active students currently enrolled across all faculties.</p>
         </div>
-        <button onClick={openAdd} className="px-4 py-2 bg-indigo-900 text-white rounded-lg text-[13px] font-medium shadow-sm hover:bg-slate-800 transition-colors">
-          + Register Student
-        </button>
+        <div className="flex gap-2">
+          <button onClick={exportCSV} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[13px] font-medium shadow-sm hover:bg-emerald-700 transition-colors">
+            ↓ Export CSV
+          </button>
+          <button onClick={openAdd} className="px-4 py-2 bg-indigo-900 text-white rounded-lg text-[13px] font-medium shadow-sm hover:bg-slate-800 transition-colors">
+            + Register Student
+          </button>
+        </div>
       </div>
 
       {msg.text && (

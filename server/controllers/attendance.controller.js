@@ -3,6 +3,7 @@ const Student    = require('../models/Student');
 const Faculty    = require('../models/Faculty');
 const Course     = require('../models/Course');
 const Alert      = require('../models/Alert');
+const { sendAlertEmail } = require('../utils/mailer');
 
 const calcPct = async (studentId, courseId) => {
   const records  = await Attendance.find({ studentId, courseId, excludeFromCalc: false });
@@ -38,44 +39,52 @@ const markAttendance = async (req, res) => {
 
     // Find the faculty assigned to this course so we can alert them
     const faculty = course?.facultyId
-      ? await Faculty.findById(course.facultyId)
-      : facultyProfile;
+      ? await Faculty.findById(course.facultyId).populate('userId', 'email name')
+      : await Faculty.findById(facultyProfile._id).populate('userId', 'email name');
 
     for (const r of records) {
       const pct = await calcPct(r.studentId, courseId);
 
       if (pct < 80) {
-        const student = await Student.findById(r.studentId);
+        const student = await Student.findById(r.studentId).populate('userId', 'email name');
         if (!student) continue;
 
         // ── Student alert ────────────────────────────────────────────────────
         const alreadyAlerted = await Alert.findOne({
-          userId: student.userId, type: 'LOW_ATTENDANCE', isRead: false,
+          userId: student.userId._id, type: 'LOW_ATTENDANCE', isRead: false,
           message: { $regex: course?.name || '' },
         });
         if (!alreadyAlerted) {
+          const msg = `Your attendance in ${course?.name || 'a course'} has dropped to ${pct}% — below the required 80%.`;
           const studentAlert = await Alert.create({
-            userId:  student.userId,
+            userId:  student.userId._id,
             type:    'LOW_ATTENDANCE',
-            message: `Your attendance in ${course?.name || 'a course'} has dropped to ${pct}% — below the required 80%.`,
+            message: msg,
           });
-          if (io) io.to(`user:${student.userId}`).emit('alert:new', studentAlert);
+          if (student.userId.email) {
+            sendAlertEmail(student.userId.email, 'Low Attendance Warning', msg);
+          }
+          if (io) io.to(`user:${student.userId._id}`).emit('alert:new', studentAlert);
         }
 
         // ── Faculty alert ─────────────────────────────────────────────────────
-        if (faculty) {
+        if (faculty && faculty.userId) {
           const facultyAlreadyAlerted = await Alert.findOne({
-            userId: faculty.userId, type: 'LOW_ATTENDANCE',
+            userId: faculty.userId._id, type: 'LOW_ATTENDANCE',
             message: { $regex: student.rollNo || '' },
             createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // once per day
           });
           if (!facultyAlreadyAlerted) {
+            const facMsg = `⚠️ Student ${student.rollNo} attendance in ${course?.name} has dropped to ${pct}%.`;
             const facultyAlert = await Alert.create({
-              userId:  faculty.userId,
+              userId:  faculty.userId._id,
               type:    'LOW_ATTENDANCE',
-              message: `⚠️ Student ${student.rollNo} attendance in ${course?.name} has dropped to ${pct}%.`,
+              message: facMsg,
             });
-            if (io) io.to(`user:${faculty.userId}`).emit('alert:new', facultyAlert);
+            if (faculty.userId.email) {
+              sendAlertEmail(faculty.userId.email, 'Student At Risk', facMsg);
+            }
+            if (io) io.to(`user:${faculty.userId._id}`).emit('alert:new', facultyAlert);
           }
         }
       }

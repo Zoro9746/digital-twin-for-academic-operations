@@ -37,6 +37,7 @@ app.use('/api/timetable',   require('./routes/timetable.routes'));
 app.use('/api/suggestions', require('./routes/suggestions.routes'));
 
 app.get('/', (req, res) => res.json({ message: '✅ Digital Twin API running' }));
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.use((err, req, res, next) => {
   console.error(`❌ [${new Date().toISOString()}] ${err.message}`);
